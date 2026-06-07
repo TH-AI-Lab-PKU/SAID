@@ -28,7 +28,7 @@ SAID/
 │   │   └── examples/block/      # Baseline eval configs (standard block-AR)
 │   ├── others/                  # Experimental generation variants
 │   │   ├── generate_random.py          # Random-order generation ablation
-│   │   ├── my_generate_gtr_duihuan.py  # GTR dialogue variant
+│   │   ├── my_generate_gtr_duihuan.py  # SAID dialogue variant
 │   │   └── no_checkboard.py            # Non-checkerboard ablation
 │   └── visualization/           # Generation process visualization
 │       ├── my_generate_gtr.py
@@ -36,13 +36,13 @@ SAID/
 │       ├── visualization_zhihu.py
 │       └── html_to_png.py
 │
-└── SAID-block/                  # Block-AR + GTR acceleration variant
-    ├── generate_gtr.py          # Flat GTR sampling
-    ├── generate_block_gtr.py    # Block-AR + intra-block GTR
+└── SAID-block/                  # Block-AR + SAID acceleration variant
+    ├── generate_gtr.py          # Flat SAID sampling
+    ├── generate_block_gtr.py    # Block-AR + intra-block SAID
     └── opencompass/
         ├── examples/            # OpenCompass eval configs
         ├── opencompass/
-        │   ├── models/dllm.py   # LLaDAModel and LLaDAGTRModel wrappers
+        │   ├── models/dllm.py   # LLaDAModel and LLaDAGTRModel (SAID) wrappers
         │   └── configs/models/dllm/
         └── summarize_perf.py    # Parse [Perf] logs and print throughput table
 ```
@@ -110,17 +110,17 @@ python html_to_png.py
 
 ---
 
-## SAID-Block: Block-AR + GTR
+## SAID-Block: Block-AR + SAID
 
-An alternative acceleration approach combining semi-autoregressive block decoding with hierarchical checkerboard sampling (GTR, Generation-then-Reconstruction).
+An alternative acceleration approach combining semi-autoregressive block decoding with hierarchical checkerboard sampling.
 
 **Block-AR**: Decode left-to-right one block at a time. Each block is fully resolved before the next starts, enabling KV-cache reuse.
 
-**GTR**: Within each block, apply a checkerboard stage partition. Generation stages handle maximally-spaced positions with full step budgets. The reconstruction stage fills the remaining ~50% of positions in as few as 1–2 steps, since they are surrounded by already-generated context.
+**SAID**: Within each block, apply a checkerboard stage partition. Generation stages handle maximally-spaced positions with full step budgets. The reconstruction stage fills the remaining ~50% of positions in as few as 1–2 steps, since they are surrounded by already-generated context.
 
 ### Generation Scripts
 
-**`generate_gtr.py`** — flat GTR (no block-AR):
+**`generate_gtr.py`** — flat SAID (no block-AR):
 
 ```python
 from generate_gtr import generate_gtr
@@ -133,7 +133,7 @@ out = generate_gtr(
 )
 ```
 
-**`generate_block_gtr.py`** — Block-AR + intra-block GTR:
+**`generate_block_gtr.py`** — Block-AR + intra-block SAID:
 
 ```python
 from generate_block_gtr import generate_block_gtr
@@ -151,7 +151,7 @@ out = generate_block_gtr(
 | Parameter | Description |
 |-----------|-------------|
 | `block_length` | Tokens per AR block (`gen_length` must be divisible) |
-| `num_stages` | GTR stages K. K=1 → vanilla LLaDA, K=2 → basic GTR, K=3 → extra sub-stage |
+| `num_stages` | SAID stages K. K=1 → vanilla LLaDA, K=2 → basic SAID, K=3 → extra sub-stage |
 | `rec_steps` | Steps for the reconstruction stage; as low as 1 for maximum speedup |
 | `diff_confidence_eos_eot_inf` | Mask EOS/EOT confidence to prevent premature stopping |
 
@@ -164,9 +164,9 @@ Model wrappers in `SAID-block/opencompass/opencompass/models/dllm.py`:
 | Class | Generation |
 |-------|-----------|
 | `LLaDAModel` | Standard block-AR (baseline) |
-| `LLaDAGTRModel` | Block-AR + GTR (accelerated) |
+| `LLaDAGTRModel` | Block-AR + SAID (accelerated) |
 
-**LLaDA 1.5 GTR configs**
+**LLaDA 1.5 SAID configs**
 
 | Config | Benchmark | Block | Length |
 |--------|-----------|-------|--------|
