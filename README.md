@@ -37,8 +37,7 @@ SAID/
 │       └── html_to_png.py
 │
 └── SAID-block/                  # Block-AR + SAID acceleration variant
-    ├── generate_gtr.py          # Flat SAID sampling
-    ├── generate_block_gtr.py    # Block-AR + intra-block SAID
+    ├── generate_gtr.py          # SAID sampling
     └── opencompass/
         ├── examples/            # OpenCompass eval configs
         ├── opencompass/
@@ -119,31 +118,26 @@ An alternative acceleration approach combining semi-autoregressive block decodin
 
 **SAID**: Within each block, apply a checkerboard stage partition. Generation stages handle maximally-spaced positions with full step budgets. The reconstruction stage fills the remaining ~50% of positions in as few as 1–2 steps, since they are surrounded by already-generated context.
 
-### Generation Scripts
+### Generation Script
 
-**`generate_gtr.py`** — flat SAID (no block-AR):
+**`generate_gtr.py`** — Block-AR + intra-block SAID. `block_length` controls the AR granularity; set `block_length=gen_length` for flat (no block-AR) decoding.
 
 ```python
 from generate_gtr import generate_gtr
 
+# Block-AR + intra-block SAID (block_length < gen_length)
 out = generate_gtr(
     model, input_ids, attention_mask,
-    steps=128, gen_length=128, block_length=128,
+    steps=128, gen_length=256, block_length=32,
     num_stages=3,   # K=3: 2 generation stages + 1 reconstruction stage
     rec_steps=2,
 )
-```
 
-**`generate_block_gtr.py`** — Block-AR + intra-block SAID:
-
-```python
-from generate_block_gtr import generate_block_gtr
-
-out = generate_block_gtr(
+# Flat SAID, no block-AR (block_length == gen_length)
+out = generate_gtr(
     model, input_ids, attention_mask,
-    steps=256, gen_length=256, block_length=32,
-    num_stages=2, rec_steps=1,
-    confidence_eos_eot_inf=True,  # recommended for LLaDA 1.5
+    steps=128, gen_length=128, block_length=128,
+    num_stages=3, rec_steps=2,
 )
 ```
 
