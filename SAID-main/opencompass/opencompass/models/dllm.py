@@ -529,81 +529,6 @@ def  _convert_base_messages(inputs):
             outputs.append(''.join(messages))
     return outputs
 
-
-@MODELS.register_module()
-class LLaDAGTRModel(LLaDAModel):
-    """LLaDA model with GTR (Generation-then-Reconstruction) acceleration.
-
-    Uses the same interface as LLaDAModel but replaces the generation function
-    with generate_gtr for training-free speedup.
-
-    Extra args:
-        num_stages (int): Number of hierarchical stages. Default 3.
-        rec_steps (int): Denoising steps for reconstruction stage. Default 2.
-    """
-    def __init__(self, num_stages=3, rec_steps=2, **kwargs):
-        super().__init__(**kwargs)
-        self.num_stages = num_stages
-        self.rec_steps = rec_steps
-
-    def generate(self, inputs: List[str], max_out_len: int) -> List[str]:
-        """Generate results given a list of inputs using GTR. """
-        messages = _convert_chat_messages(inputs)
-        prompt = [self.tokenizer.apply_chat_template(m_i, add_generation_prompt=True, tokenize=False) for m_i in messages]
-        print('steps:', self.gen_steps, 'length:', self.gen_length, 'blocksize:', self.gen_blocksize)
-        print('temperature:', self.temperature, 'cfg:', self.cfg, 'remasking:', self.remasking)
-        print('num_stages:', self.num_stages, 'rec_steps:', self.rec_steps)
-        print('mask_id:', self.mask_id, 'padding_id:', self.padding_id)
-        print('diff_confidence_eos_eot_inf:', self.diff_confidence_eos_eot_inf, 'diff_logits_eos_inf:', self.diff_logits_eos_inf)
-        print('final prompt:', prompt)
-        self.tokenizer.padding_side = "left"
-        prompt = self.tokenizer.batch_encode_plus(prompt, padding=True, return_tensors='pt')['input_ids']
-        batch_size = prompt.shape[0]
-
-        # ── Speed & throughput measurement ──
-        torch.cuda.synchronize()
-        t_start = time.perf_counter()
-
-        x = LLaDA_generate_gtr(
-            model=self.model,
-            prompt=prompt.to(self.model.device),
-            steps=self.gen_steps,
-            gen_length=self.gen_length,
-            block_length=self.gen_blocksize,
-            temperature=self.temperature,
-            cfg_scale=self.cfg,
-            remasking=self.remasking,
-            mask_id=self.mask_id,
-            confidence_eos_eot_inf=self.diff_confidence_eos_eot_inf,
-            logits_eos_inf=self.diff_logits_eos_inf,
-            num_stages=self.num_stages,
-            rec_steps=self.rec_steps,
-        )
-
-        torch.cuda.synchronize()
-        t_end = time.perf_counter()
-        elapsed = t_end - t_start
-
-        total_gen_tokens = batch_size * self.gen_length
-        tokens_per_sec = total_gen_tokens / elapsed if elapsed > 0 else 0
-        print(f'[Perf-GTR] batch_size={batch_size}, gen_length={self.gen_length}, '
-              f'total_tokens={total_gen_tokens}, '
-              f'time={elapsed:.3f}s, '
-              f'tokens/s={tokens_per_sec:.2f}, '
-              f'latency/sample={elapsed/batch_size:.3f}s, '
-              f'num_stages={self.num_stages}, rec_steps={self.rec_steps}')
-        # ── End speed measurement ──
-
-        responses = []
-        for i in range(batch_size):
-            responses.append(self.tokenizer.decode(x[i, -self.gen_length:], skip_special_tokens=True))
-        print('--------------------')
-        for i in range(batch_size):
-            print(f'Response {i}:', responses[i])
-            print('====================')
-        print('--------------------')
-        return responses
-    
 class LLaDABaseModel(LLaDAModel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -619,13 +544,6 @@ class LLaDABaseModel(LLaDAModel):
         print('final prompt:', prompt)
         self.tokenizer.padding_side = "left" 
         prompt = self.tokenizer.batch_encode_plus(prompt, padding = True, return_tensors='pt')['input_ids']
-        
-        batch_size = prompt.shape[0]
-
-        # ── Speed & throughput measurement ──
-        torch.cuda.synchronize()
-        t_start = time.perf_counter()
-        
         x = LLaDA_generate(
             model = self.model,
             prompt = prompt.to(self.model.device),
@@ -639,20 +557,6 @@ class LLaDABaseModel(LLaDAModel):
             confidence_eos_eot_inf = self.diff_confidence_eos_eot_inf,
             logits_eos_inf = self.diff_logits_eos_inf,
         )
-        
-        torch.cuda.synchronize()
-        t_end = time.perf_counter()
-        elapsed = t_end - t_start
-
-        total_gen_tokens = batch_size * self.gen_length
-        tokens_per_sec = total_gen_tokens / elapsed if elapsed > 0 else 0
-        print(f'[Perf] batch_size={batch_size}, gen_length={self.gen_length}, '
-              f'total_tokens={total_gen_tokens}, '
-              f'time={elapsed:.3f}s, '
-              f'tokens/s={tokens_per_sec:.2f}, '
-              f'latency/sample={elapsed/batch_size:.3f}s')
-        # ── End speed measurement ──
-
         responses = []
         batch_size = prompt.shape[0]
         
