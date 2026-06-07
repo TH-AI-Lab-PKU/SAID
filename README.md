@@ -104,6 +104,7 @@ Scripts in `SAID-main/visualization/` animate the generation process step by ste
 
 ```bash
 cd SAID-main/visualization
+python my_generate_gtr.py
 python visualization_paper.py
 python html_to_png.py
 ```
