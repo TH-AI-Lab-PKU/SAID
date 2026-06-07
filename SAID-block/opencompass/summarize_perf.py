@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Summarize [Perf] / [Perf-GTR] timing from opencompass log files.
+Summarize [Perf] / [Perf-SAID] timing from opencompass log files.
 
 Usage:
     python summarize_perf.py <outputs_dir>
@@ -35,9 +35,9 @@ def parse_logs(output_dir):
 
             with open(filepath, 'r', errors='ignore') as f:
                 for line in f:
-                    # Match [Perf] or [Perf-GTR] lines
+                    # Match [Perf] or [Perf-SAID] lines
                     m = re.search(
-                        r'\[Perf(?:-GTR)?\]\s+'
+                        r'\[Perf(?:-SAID)?\]\s+'
                         r'batch_size=(\d+),\s*gen_length=(\d+),\s*'
                         r'total_tokens=(\d+),\s*time=([\d.]+)s',
                         line
@@ -104,7 +104,7 @@ def main():
     results = parse_logs(output_dir)
 
     if not results:
-        print("No [Perf] / [Perf-GTR] entries found in logs.")
+        print("No [Perf] / [Perf-SAID] entries found in logs.")
         sys.exit(0)
 
     print_summary(results)

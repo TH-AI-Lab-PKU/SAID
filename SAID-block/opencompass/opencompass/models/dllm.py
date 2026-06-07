@@ -563,7 +563,7 @@ class LLaDASAIDModel(LLaDAModel):
         self.rec_steps = rec_steps
 
     def generate(self, inputs: List[str], max_out_len: int) -> List[str]:
-        """Generate results given a list of inputs using GTR. """
+        """Generate results given a list of inputs using SAID. """
         messages = _convert_chat_messages(inputs)
         prompt = [self.tokenizer.apply_chat_template(m_i, add_generation_prompt=True, tokenize=False) for m_i in messages]
         print('steps:', self.gen_steps, 'length:', self.gen_length, 'blocksize:', self.gen_blocksize)

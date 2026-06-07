@@ -1,5 +1,5 @@
 """
-GtR (Generation-then-Reconstruction) inference for LLaDA.
+SAID inference for LLaDA.
 
 Adapted from the paper:
   "Generation Then Reconstruction: Accelerating Masked Autoregressive Models
@@ -250,13 +250,13 @@ def generate_said(
     rec_steps=2,
 ):
     """
-    GtR-accelerated generation for LLaDA.
+    SAID-accelerated generation for LLaDA.
 
     Compared to the original generate(), this adds:
       - num_stages:  K in the paper. Number of hierarchical stages.
                      Stage 1..K-1 = generation (slow), stage K = reconstruction (fast).
                      K=1 degrades to the original LLaDA sampling.
-                     K=2 is the basic two-stage GtR.
+                     K=2 is the basic two-stage SAID.
                      K=3 (default) adds one extra sub-stage for early global structure.
       - rec_steps:   Number of denoising steps for the reconstruction stage (default 2).
                      Can be as low as 1 for maximum speedup.
@@ -410,7 +410,7 @@ def main():
     torch.cuda.synchronize()
     t1 = time.perf_counter()
     elapsed_said = t1 - t0
-    print(f'[Perf-GTR] batch={input_ids.shape[0]}, gen_length={gen_length}, '
+    print(f'[Perf-SAID] batch={input_ids.shape[0]}, gen_length={gen_length}, '
           f'total_tokens={total_tokens_orig}, '
           f'time={elapsed_said:.3f}s, '
           f'tokens/s={total_tokens_orig/elapsed_said:.2f}, '
@@ -437,7 +437,7 @@ def main():
     torch.cuda.synchronize()
     t1 = time.perf_counter()
     elapsed_said_fast = t1 - t0
-    print(f'[Perf-GTR-Fast] batch={input_ids.shape[0]}, gen_length={gen_length}, '
+    print(f'[Perf-SAID-Fast] batch={input_ids.shape[0]}, gen_length={gen_length}, '
           f'total_tokens={total_tokens_orig}, '
           f'time={elapsed_said_fast:.3f}s, '
           f'tokens/s={total_tokens_orig/elapsed_said_fast:.2f}, '
