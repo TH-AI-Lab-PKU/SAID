@@ -15,7 +15,7 @@ from opencompass.models.base_api import APITemplateParser
 from opencompass.registry import MODELS
 from opencompass.utils.logging import get_logger
 from opencompass.utils.prompt import PromptList
-from my_generate_gtr_fc import generate as LLaDA_generate
+from my_generate_said_fc import generate as LLaDA_generate
 import torch.nn.functional as F
 import numpy as np
 PromptType = Union[PromptList, str]
@@ -67,7 +67,7 @@ def get_num_transfer_tokens(mask_index, steps):
 
 
 @MODELS.register_module()
-class LLaDAModelgtrfc(BaseModel):
+class LLaDAModelsaidfc(BaseModel):
     """Model wrapper around LLaDA model.
 
     Args:
@@ -527,7 +527,7 @@ def  _convert_base_messages(inputs):
             outputs.append(''.join(messages))
     return outputs
 
-class LLaDABaseModelgtrfc(LLaDAModelgtrfc):
+class LLaDABaseModelsaidfc(LLaDAModelsaidfc):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.template_parser = LMTemplateParser()

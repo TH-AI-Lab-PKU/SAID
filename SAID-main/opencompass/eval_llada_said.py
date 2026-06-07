@@ -13,7 +13,7 @@ from lm_eval.api.registry import register_model
 from tqdm import tqdm
 
 from transformers import AutoTokenizer, AutoModel
-from my_generate_gtr import generate
+from my_generate_said import generate
 
 
 def set_seed(seed):

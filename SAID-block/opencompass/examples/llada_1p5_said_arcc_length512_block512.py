@@ -1,13 +1,13 @@
 from mmengine.config import read_base
 with read_base():
-    from opencompass.configs.datasets.gpqa.gpqa_fewshot_gen import \
-        gpqa_datasets
-    from opencompass.configs.models.dllm.llada_15_instruct_8b_gtr import \
-        models as llada_gtr_models
-datasets = gpqa_datasets
-models = llada_gtr_models
-# Baseline: gen_steps=256, block16 → GTR: gen_steps=64, same block
-eval_cfg = {'gen_blocksize': 16, 'gen_length': 256, 'gen_steps': 64, 'batch_size': 1, 'batch_size_': 1}
+    from opencompass.configs.datasets.ARC_c.ARC_c_gen import \
+        ARC_c_datasets
+    from opencompass.configs.models.dllm.llada_15_instruct_8b_said import \
+        models as llada_said_models
+datasets = ARC_c_datasets
+models = llada_said_models
+# Baseline: gen_steps=512, block512 → SAID: gen_steps=128, same block
+eval_cfg = {'gen_blocksize': 512, 'gen_length': 512, 'gen_steps': 128, 'batch_size': 1, 'batch_size_': 1}
 for model in models:
     model.update(eval_cfg)
 from opencompass.partitioners import NumWorkerPartitioner

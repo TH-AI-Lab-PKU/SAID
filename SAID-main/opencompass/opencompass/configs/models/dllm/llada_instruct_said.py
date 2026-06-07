@@ -1,8 +1,8 @@
-from opencompass.models import LLaDAModelgtrfc
+from opencompass.models import LLaDAModelsaidfc
 
 models = [
     dict(
-        type=LLaDAModelgtrfc,
+        type=LLaDAModelsaidfc,
         abbr='llada-8b-instruct',
         path='/home/nvme04/worldf/wm_mem/model',
         max_out_len=1024,

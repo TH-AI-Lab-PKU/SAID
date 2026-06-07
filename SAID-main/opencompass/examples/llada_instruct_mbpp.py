@@ -2,7 +2,7 @@ from mmengine.config import read_base
 with read_base():
     from opencompass.configs.datasets.mbpp.mbpp_gen import \
         mbpp_datasets
-    from opencompass.configs.models.dllm.llada_instruct_gtr import \
+    from opencompass.configs.models.dllm.llada_instruct_said import \
         models as llada_instruct_8b_models
 datasets = mbpp_datasets
 models = llada_instruct_8b_models

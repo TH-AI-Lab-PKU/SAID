@@ -17,7 +17,7 @@ from opencompass.utils.logging import get_logger
 from opencompass.utils.prompt import PromptList
 ##use llada generate
 from generate import generate as LLaDA_generate
-from generate_gtr import generate_gtr as LLaDA_generate_gtr
+from generate_said import generate_said as LLaDA_generate_said
 import torch.nn.functional as F
 import numpy as np
 PromptType = Union[PromptList, str]
@@ -547,11 +547,11 @@ def  _convert_base_messages(inputs):
     return outputs
 
 @MODELS.register_module()
-class LLaDAGTRModel(LLaDAModel):
-    """LLaDA model with GTR (Generation-then-Reconstruction) acceleration.
+class LLaDASAIDModel(LLaDAModel):
+    """LLaDA model with SAID (Generation-then-Reconstruction) acceleration.
 
     Uses the same interface as LLaDAModel but replaces the generation function
-    with generate_gtr for training-free speedup.
+    with generate_said for training-free speedup.
 
     Extra args:
         num_stages (int): Number of hierarchical stages. Default 3.
@@ -580,7 +580,7 @@ class LLaDAGTRModel(LLaDAModel):
         torch.cuda.synchronize()
         t_start = time.perf_counter()
 
-        x = LLaDA_generate_gtr(
+        x = LLaDA_generate_said(
             model=self.model,
             prompt=prompt.to(self.model.device),
             steps=self.gen_steps,
@@ -605,13 +605,13 @@ class LLaDAGTRModel(LLaDAModel):
         self._perf_total_time += elapsed
         self._perf_total_tokens += total_gen_tokens
         self._perf_total_samples += batch_size
-        print(f'[Perf-GTR] batch_size={batch_size}, gen_length={self.gen_length}, '
+        print(f'[Perf-SAID] batch_size={batch_size}, gen_length={self.gen_length}, '
               f'total_tokens={total_gen_tokens}, '
               f'time={elapsed:.3f}s, '
               f'tokens/s={tokens_per_sec:.2f}, '
               f'latency/sample={elapsed/batch_size:.3f}s, '
               f'num_stages={self.num_stages}, rec_steps={self.rec_steps}')
-        print(f'[Perf-GTR-Cumulative] samples={self._perf_total_samples}, '
+        print(f'[Perf-SAID-Cumulative] samples={self._perf_total_samples}, '
               f'tokens={self._perf_total_tokens}, '
               f'total_time={self._perf_total_time:.3f}s, '
               f'avg_tokens/s={self._perf_total_tokens/self._perf_total_time:.2f}, '

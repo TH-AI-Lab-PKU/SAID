@@ -1,13 +1,13 @@
 from mmengine.config import read_base
 with read_base():
-    from opencompass.configs.datasets.humaneval.humaneval_gen_8e312c import \
-        humaneval_datasets
-    from opencompass.configs.models.dllm.llada_15_instruct_8b_gtr import \
-        models as llada_gtr_models
-datasets = humaneval_datasets
-models = llada_gtr_models
-# Baseline: gen_steps=512, block32 → GTR: gen_steps=128, same block
-eval_cfg = {'gen_blocksize': 32, 'gen_length': 512, 'gen_steps': 128, 'batch_size_': 1, 'batch_size': 1}
+    from opencompass.configs.datasets.math.math_0shot_gen_11c4b5 import \
+        math_datasets
+    from opencompass.configs.models.dllm.llada_15_instruct_8b_said import \
+        models as llada_said_models
+datasets = math_datasets
+models = llada_said_models
+# Baseline: gen_steps=1024, block128 → SAID: gen_steps=256, same block
+eval_cfg = {'gen_blocksize': 128, 'gen_length': 1024, 'gen_steps': 256, 'batch_size': 1, 'batch_size_': 1}
 for model in models:
     model.update(eval_cfg)
 from opencompass.partitioners import NumWorkerPartitioner

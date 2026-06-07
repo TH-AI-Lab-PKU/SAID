@@ -1,9 +1,9 @@
-from opencompass.models import LLaDAGTRModel
+from opencompass.models import LLaDASAIDModel
 
 models = [
     dict(
-        type=LLaDAGTRModel,
-        abbr='llada-1.5-8b-instruct-gtr',
+        type=LLaDASAIDModel,
+        abbr='llada-1.5-8b-instruct-said',
         path='GSAI-ML/LLaDA-1.5',
         max_out_len=1024,
         batch_size=1,

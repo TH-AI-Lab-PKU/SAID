@@ -53,4 +53,4 @@ from .zhipuai_api import ZhiPuAI  # noqa: F401
 from .zhipuai_v2_api import ZhiPuV2AI  # noqa: F401
 
 from .dllm import LLaDAModel, LLaDABaseModel # noqa: F401
-from .dllmgtrfc import LLaDAModelgtrfc, LLaDABaseModelgtrfc
+from .dllmsaidfc import LLaDAModelsaidfc, LLaDABaseModelsaidfc

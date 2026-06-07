@@ -3,7 +3,7 @@ from mmengine.config import read_base
 with read_base():
     from opencompass.configs.datasets.gpqa.gpqa_fewshot_gen import \
         gpqa_datasets
-    from opencompass.configs.models.dllm.llada_instruct_gtr import \
+    from opencompass.configs.models.dllm.llada_instruct_said import \
         models as llada_instruct_8b_models
 datasets = gpqa_datasets
 models = llada_instruct_8b_models

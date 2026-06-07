@@ -3,7 +3,7 @@ with read_base():
     from opencompass.configs.datasets.ARC_c.ARC_c_gen import \
         ARC_c_datasets
 
-    from opencompass.configs.models.dllm.llada_instruct_gtr import \
+    from opencompass.configs.models.dllm.llada_instruct_said import \
         models as llada_instruct_8b_models
 datasets = ARC_c_datasets
 models = llada_instruct_8b_models

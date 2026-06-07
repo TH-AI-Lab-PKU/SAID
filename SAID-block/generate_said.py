@@ -60,13 +60,13 @@ def get_num_transfer_tokens(mask_index, steps):
 
 
 # ──────────────────────────────────────────────
-# GTR Stage Partitioning  (Algorithm 1, 1D version)
+# SAID Stage Partitioning  (Algorithm 1, 1D version)
 # ──────────────────────────────────────────────
 
-def gtr_stage_partition(gen_length, num_stages):
+def said_stage_partition(gen_length, num_stages):
     """
     Partition positions [0, gen_length) into `num_stages` disjoint subsets
-    using the 1D checkerboard hierarchy (Algorithm 1 from the GTR paper).
+    using the 1D checkerboard hierarchy (Algorithm 1 from the SAID paper).
 
     In 1D the rule  (i+j) mod 2^k  reduces to  pos mod 2^k.
 
@@ -235,17 +235,17 @@ def _run_stage(
 
 
 # ──────────────────────────────────────────────
-# Main entry: generate_gtr
+# Main entry: generate_said
 # ──────────────────────────────────────────────
 
 @torch.no_grad()
-def generate_gtr(
+def generate_said(
     model, prompt, attention_mask=None,
     steps=128, gen_length=128, block_length=128,
     temperature=0., cfg_scale=0.,
     remasking='low_confidence', mask_id=126336,
     logits_eos_inf=False, confidence_eos_eot_inf=False,
-    # ─── GTR-specific parameters ───
+    # ─── SAID-specific parameters ───
     num_stages=3,
     rec_steps=2,
 ):
@@ -293,9 +293,9 @@ def generate_gtr(
         block_end = prompt_len + (num_block + 1) * block_length
         current_block_length = block_end - block_start
 
-        # ── GTR stage partitioning within this block ──
+        # ── SAID stage partitioning within this block ──
         # Positions are relative to the block; convert to absolute later
-        stages_rel = gtr_stage_partition(current_block_length, num_stages)
+        stages_rel = said_stage_partition(current_block_length, num_stages)
         stage_steps_list = compute_stage_steps(num_stages, steps // num_blocks, rec_steps)
 
         for stage_idx, (rel_positions, stage_steps) in enumerate(
@@ -384,7 +384,7 @@ def main():
         print(o)
         print("-" * 50)
 
-    # ── GTR: same total steps budget, but reconstruction stage uses only 2 steps ──
+    # ── SAID: same total steps budget, but reconstruction stage uses only 2 steps ──
     # With num_stages=3, rec_steps=2:
     #   Stage 1 (~25% tokens): ~63 steps  (slow, global structure)
     #   Stage 2 (~25% tokens): ~63 steps  (slow, fill gaps)
@@ -396,12 +396,12 @@ def main():
     #   → ~31 + ~31 + 2 = 64 model calls (vs original 128), ~2x speedup
 
     print("\n" + "=" * 60)
-    print("GTR sampling (same budget, num_stages=3, rec_steps=2)")
+    print("SAID sampling (same budget, num_stages=3, rec_steps=2)")
     print("=" * 60)
 
     torch.cuda.synchronize()
     t0 = time.perf_counter()
-    out_gtr = generate_gtr(
+    out_said = generate_said(
         model, input_ids, attention_mask,
         steps=total_steps, gen_length=gen_length, block_length=block_length,
         temperature=0., cfg_scale=0., remasking='low_confidence',
@@ -409,26 +409,26 @@ def main():
     )
     torch.cuda.synchronize()
     t1 = time.perf_counter()
-    elapsed_gtr = t1 - t0
+    elapsed_said = t1 - t0
     print(f'[Perf-GTR] batch={input_ids.shape[0]}, gen_length={gen_length}, '
           f'total_tokens={total_tokens_orig}, '
-          f'time={elapsed_gtr:.3f}s, '
-          f'tokens/s={total_tokens_orig/elapsed_gtr:.2f}, '
-          f'latency/sample={elapsed_gtr/input_ids.shape[0]:.3f}s, '
-          f'speedup={elapsed_orig/elapsed_gtr:.2f}x')
+          f'time={elapsed_said:.3f}s, '
+          f'tokens/s={total_tokens_orig/elapsed_said:.2f}, '
+          f'latency/sample={elapsed_said/input_ids.shape[0]:.3f}s, '
+          f'speedup={elapsed_orig/elapsed_said:.2f}x')
 
-    for o in tokenizer.batch_decode(out_gtr[:, input_ids.shape[1]:], skip_special_tokens=True):
+    for o in tokenizer.batch_decode(out_said[:, input_ids.shape[1]:], skip_special_tokens=True):
         print(o)
         print("-" * 50)
 
-    # ── GTR with actual speedup: fewer total steps ──
+    # ── SAID with actual speedup: fewer total steps ──
     print("\n" + "=" * 60)
-    print("GTR sampling (speedup mode: steps=64, num_stages=3, rec_steps=1)")
+    print("SAID sampling (speedup mode: steps=64, num_stages=3, rec_steps=1)")
     print("=" * 60)
 
     torch.cuda.synchronize()
     t0 = time.perf_counter()
-    out_gtr_fast = generate_gtr(
+    out_said_fast = generate_said(
         model, input_ids, attention_mask,
         steps=64, gen_length=gen_length, block_length=block_length,
         temperature=0., cfg_scale=0., remasking='low_confidence',
@@ -436,15 +436,15 @@ def main():
     )
     torch.cuda.synchronize()
     t1 = time.perf_counter()
-    elapsed_gtr_fast = t1 - t0
+    elapsed_said_fast = t1 - t0
     print(f'[Perf-GTR-Fast] batch={input_ids.shape[0]}, gen_length={gen_length}, '
           f'total_tokens={total_tokens_orig}, '
-          f'time={elapsed_gtr_fast:.3f}s, '
-          f'tokens/s={total_tokens_orig/elapsed_gtr_fast:.2f}, '
-          f'latency/sample={elapsed_gtr_fast/input_ids.shape[0]:.3f}s, '
-          f'speedup={elapsed_orig/elapsed_gtr_fast:.2f}x')
+          f'time={elapsed_said_fast:.3f}s, '
+          f'tokens/s={total_tokens_orig/elapsed_said_fast:.2f}, '
+          f'latency/sample={elapsed_said_fast/input_ids.shape[0]:.3f}s, '
+          f'speedup={elapsed_orig/elapsed_said_fast:.2f}x')
 
-    for o in tokenizer.batch_decode(out_gtr_fast[:, input_ids.shape[1]:], skip_special_tokens=True):
+    for o in tokenizer.batch_decode(out_said_fast[:, input_ids.shape[1]:], skip_special_tokens=True):
         print(o)
         print("-" * 50)
 
@@ -454,8 +454,8 @@ def main():
     print("=" * 60)
     print(f"{'Method':<25} {'Time(s)':<10} {'Tokens/s':<12} {'Speedup':<10}")
     print(f"{'Original LLaDA':<25} {elapsed_orig:<10.3f} {total_tokens_orig/elapsed_orig:<12.2f} {'1.00x':<10}")
-    print(f"{'GTR (same budget)':<25} {elapsed_gtr:<10.3f} {total_tokens_orig/elapsed_gtr:<12.2f} {elapsed_orig/elapsed_gtr:<10.2f}x")
-    print(f"{'GTR (fast, steps=64)':<25} {elapsed_gtr_fast:<10.3f} {total_tokens_orig/elapsed_gtr_fast:<12.2f} {elapsed_orig/elapsed_gtr_fast:<10.2f}x")
+    print(f"{'SAID (same budget)':<25} {elapsed_said:<10.3f} {total_tokens_orig/elapsed_said:<12.2f} {elapsed_orig/elapsed_said:<10.2f}x")
+    print(f"{'SAID (fast, steps=64)':<25} {elapsed_said_fast:<10.3f} {total_tokens_orig/elapsed_said_fast:<12.2f} {elapsed_orig/elapsed_said_fast:<10.2f}x")
     print("=" * 60)
 
 
