@@ -21,27 +21,27 @@ Total model calls ≈ `steps + 1 + 3`, vs. `steps` calls for vanilla LLaDA — s
 SAID/
 ├── SAID-main/                   # Core SAID method + evaluation
 │   ├── generate.py              # Standard LLaDA block-AR generation (baseline)
-│   ├── my_generate_gtr_fc.py    # SAID generation (scaffold + confidence reconstruction)
+│   ├── my_generate_said_fc.py    # SAID generation (scaffold + confidence reconstruction)
 │   ├── eval.sh                  # Evaluation commands (baseline vs. SAID)
 │   ├── opencompass/
 │   │   ├── examples/            # SAID eval configs (our method)
 │   │   └── examples/block/      # Baseline eval configs (standard block-AR)
 │   ├── others/                  # Experimental generation variants
 │   │   ├── generate_random.py          # Random-order generation ablation
-│   │   ├── my_generate_gtr_duihuan.py  # SAID dialogue variant
+│   │   ├── my_generate_said_duihuan.py  # SAID dialogue variant
 │   │   └── no_checkboard.py            # Non-checkerboard ablation
 │   └── visualization/           # Generation process visualization
-│       ├── my_generate_gtr.py
+│       ├── my_generate_said.py
 │       ├── visualization_paper.py
 │       ├── visualization_zhihu.py
 │       └── html_to_png.py
 │
 └── SAID-block/                  # Block-AR + SAID acceleration variant
-    ├── generate_gtr.py          # SAID sampling
+    ├── generate_said.py          # SAID sampling
     └── opencompass/
         ├── examples/            # OpenCompass eval configs
         ├── opencompass/
-        │   ├── models/dllm.py   # LLaDAModel and LLaDAGTRModel (SAID) wrappers
+        │   ├── models/dllm.py   # LLaDAModel and LLaDASAIDModel (SAID) wrappers
         │   └── configs/models/dllm/
         └── summarize_perf.py    # Parse [Perf] logs and print throughput table
 ```
@@ -83,12 +83,12 @@ python run.py examples/llada_instruct_arcc.py
 python run.py examples/llada_instruct_mmlupro.py
 ```
 
-> **MBPP note**: set `CONF_THRESH = 0.7` and `num_transfer_hard` steps to 8 in `my_generate_gtr_fc.py` before running:
+> **MBPP note**: set `CONF_THRESH = 0.7` and `num_transfer_hard` steps to 8 in `my_generate_said_fc.py` before running:
 > ```bash
 > python run.py examples/llada_instruct_mbpp.py
 > ```
 
-### Key Parameters (`my_generate_gtr_fc.py`)
+### Key Parameters (`my_generate_said_fc.py`)
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
@@ -103,7 +103,7 @@ Scripts in `SAID-main/visualization/` animate the generation process step by ste
 
 ```bash
 cd SAID-main/visualization
-python my_generate_gtr.py
+python my_generate_said.py
 python visualization_paper.py
 python html_to_png.py
 ```
@@ -120,13 +120,13 @@ An alternative acceleration approach combining semi-autoregressive block decodin
 
 ### Generation Script
 
-**`generate_gtr.py`** — Block-AR + intra-block SAID. `block_length` controls the AR granularity; set `block_length=gen_length` for flat (no block-AR) decoding.
+**`generate_said.py`** — Block-AR + intra-block SAID. `block_length` controls the AR granularity; set `block_length=gen_length` for flat (no block-AR) decoding.
 
 ```python
-from generate_gtr import generate_gtr
+from generate_said import generate_said
 
 # Block-AR + intra-block SAID (block_length < gen_length)
-out = generate_gtr(
+out = generate_said(
     model, input_ids, attention_mask,
     steps=128, gen_length=256, block_length=32,
     num_stages=3,   # K=3: 2 generation stages + 1 reconstruction stage
@@ -134,7 +134,7 @@ out = generate_gtr(
 )
 
 # Flat SAID, no block-AR (block_length == gen_length)
-out = generate_gtr(
+out = generate_said(
     model, input_ids, attention_mask,
     steps=128, gen_length=128, block_length=128,
     num_stages=3, rec_steps=2,
@@ -159,19 +159,19 @@ Model wrappers in `SAID-block/opencompass/opencompass/models/dllm.py`:
 | Class | Generation |
 |-------|-----------|
 | `LLaDAModel` | Standard block-AR (baseline) |
-| `LLaDAGTRModel` | Block-AR + SAID (accelerated) |
+| `LLaDASAIDModel` | Block-AR + SAID (accelerated) |
 
 **LLaDA 1.5 SAID configs**
 
 | Config | Benchmark | Block | Length |
 |--------|-----------|-------|--------|
-| `llada_1p5_gtr_arcc_length512_block512.py` | ARC-Challenge | 512 | 512 |
-| `llada_1p5_gtr_gpqa_length256_block16.py` | GPQA | 16 | 256 |
-| `llada_1p5_gtr_gsm8k_length256_block16.py` | GSM8K | 16 | 256 |
-| `llada_1p5_gtr_humaneval_length512_block32.py` | HumanEval | 32 | 512 |
-| `llada_1p5_gtr_ifeval_length256_block16.py` | IFEval | 16 | 256 |
-| `llada_1p5_gtr_math_length1024_block128.py` | MATH | 128 | 1024 |
-| `llada_1p5_gtr_mbpp_length512_block32.py` | MBPP | 32 | 512 |
+| `llada_1p5_said_arcc_length512_block512.py` | ARC-Challenge | 512 | 512 |
+| `llada_1p5_said_gpqa_length256_block16.py` | GPQA | 16 | 256 |
+| `llada_1p5_said_gsm8k_length256_block16.py` | GSM8K | 16 | 256 |
+| `llada_1p5_said_humaneval_length512_block32.py` | HumanEval | 32 | 512 |
+| `llada_1p5_said_ifeval_length256_block16.py` | IFEval | 16 | 256 |
+| `llada_1p5_said_math_length1024_block128.py` | MATH | 128 | 1024 |
+| `llada_1p5_said_mbpp_length512_block32.py` | MBPP | 32 | 512 |
 
 **LLaDA 1.5 baseline configs**
 
