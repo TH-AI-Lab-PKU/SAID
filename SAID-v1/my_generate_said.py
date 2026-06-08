@@ -67,7 +67,7 @@ def generate(model, prompt, attention_mask=None, steps=128, gen_length=128, temp
     odd_mask[:, prompt_len:] = odd[prompt_len:]
 
 
-    CONF_THRESH = 0.5
+    CONF_THRESH = 0.8
 
     logits = model(x, attention_mask=attention_mask).logits 
     if logits_eos_inf:
