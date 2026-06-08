@@ -19,13 +19,12 @@ Total model calls ≈ `steps + 1 + 3`, vs. `steps` calls for vanilla LLaDA — s
 
 ```
 SAID/
-├── SAID-main/                   # Core SAID method + evaluation
+├── SAID-v1/                   # Core SAID method + evaluation
 │   ├── generate.py              # Standard LLaDA block-AR generation (baseline)
-│   ├── my_generate_said_fc.py    # SAID generation (scaffold + confidence reconstruction)
+│   ├── my_generate_said.py    # SAID generation (scaffold + confidence reconstruction)
 │   ├── eval.sh                  # Evaluation commands (baseline vs. SAID)
 │   ├── opencompass/
 │   │   ├── examples/            # SAID eval configs (our method)
-│   │   └── examples/block/      # Baseline eval configs (standard block-AR)
 │   ├── others/                  # Experimental generation variants
 │   │   ├── generate_random.py          # Random-order generation ablation
 │   │   ├── my_generate_said_duihuan.py  # SAID dialogue variant
@@ -48,12 +47,12 @@ SAID/
 
 ---
 
-## SAID-Main
+## SAID-v1
 
 ### Setup
 
 ```bash
-cd SAID-main/opencompass
+cd SAID-v1/opencompass
 pip install -e .
 huggingface-cli download GSAI-ML/LLaDA-8B-Instruct
 ```
@@ -63,7 +62,7 @@ Update the model path in `opencompass/opencompass/configs/models/dllm/llada_inst
 ### Run Baseline (standard block-AR)
 
 ```bash
-cd SAID-main/opencompass
+cd SAID-v1/opencompass
 python run.py examples/llada_instruct_gen_arcc_length512_block512.py
 python run.py examples/llada_instruct_gen_gpqa_length64_block64_confidence.py
 python run.py examples/llada_instruct_gen_gsm8k_length512_block512_confidence.py
@@ -75,7 +74,7 @@ python run.py examples/llada_instruct_gen_mmlupro_length256_block256.py
 ### Run SAID (our method)
 
 ```bash
-cd SAID-main/opencompass
+cd SAID-v1/opencompass
 python run.py examples/llada_instruct_gsm8k.py
 python run.py examples/llada_instruct_math.py
 python run.py examples/llada_instruct_gpqa.py
@@ -99,10 +98,10 @@ python run.py examples/llada_instruct_mmlupro.py
 
 ### Visualization
 
-Scripts in `SAID-main/visualization/` animate the generation process step by step, producing HTML or PNG figures for papers or blog posts.
+Scripts in `SAID-v1/visualization/` animate the generation process step by step, producing HTML or PNG figures for papers or blog posts.
 
 ```bash
-cd SAID-main/visualization
+cd SAID-v1/visualization
 python my_generate_said.py
 python visualization_paper.py
 python html_to_png.py
