@@ -64,12 +64,12 @@ Update the model path in `opencompass/opencompass/configs/models/dllm/llada_inst
 
 ```bash
 cd SAID-main/opencompass
-python run.py examples/block/llada_instruct_gen_arcc_length512_block512.py
-python run.py examples/block/llada_instruct_gen_gpqa_length64_block64_confidence.py
-python run.py examples/block/llada_instruct_gen_gsm8k_length512_block512_confidence.py
-python run.py examples/block/llada_instruct_gen_math_length512_block512_confidence.py
-python run.py examples/block/llada_instruct_gen_mbpp_length256_block256_confidence.py
-python run.py examples/block/llada_instruct_gen_mmlupro_length256_block256.py
+python run.py examples/llada_instruct_gen_arcc_length512_block512.py
+python run.py examples/llada_instruct_gen_gpqa_length64_block64_confidence.py
+python run.py examples/llada_instruct_gen_gsm8k_length512_block512_confidence.py
+python run.py examples/llada_instruct_gen_math_length512_block512_confidence.py
+python run.py examples/llada_instruct_gen_mbpp_length256_block256_confidence.py
+python run.py examples/llada_instruct_gen_mmlupro_length256_block256.py
 ```
 
 ### Run SAID (our method)
