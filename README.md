@@ -82,7 +82,7 @@ python run.py examples/llada_instruct_arcc.py
 python run.py examples/llada_instruct_mmlupro.py
 ```
 
-> **MBPP note**: set `CONF_THRESH = 0.7` and `num_transfer_hard` steps to 8 in `my_generate_said_fc.py` before running:
+> **MBPP note**: set `num_transfer_hard` steps to 8 in `my_generate_said.py` before running:
 > ```bash
 > python run.py examples/llada_instruct_mbpp.py
 > ```
