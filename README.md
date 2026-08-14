@@ -187,7 +187,9 @@ The project code is implemented based on **NVIDIA**, with concurrent support for
 
 For SAID-v1, find `SAID-v1/opencompass/opencompass/models/dllmsaid.py`. For SAID-block, find `SAID-block/opencompass/opencompass/models/dllm.py`, 
 replace **auto** and **cuda** with **npu**。Such as SAID-v1：
+```bash
 
+```
 
 
 
