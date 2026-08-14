@@ -87,15 +87,6 @@ python run.py examples/llada_instruct_mmlupro.py
 > python run.py examples/llada_instruct_mbpp.py
 > ```
 
-### Key Parameters (`my_generate_said_fc.py`)
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `steps` | 128 | Diffusion steps for the scaffold stage (even positions) |
-| `gen_length` | 128 | Total tokens to generate |
-| `CONF_THRESH` | 0.8 | Confidence threshold separating easy vs. hard reconstruction tokens (0.7 for MBPP) |
-| `num_transfer_hard` steps | 3 | Refinement steps for low-confidence reconstruction tokens (8 for MBPP) |
-
 ### Visualization
 
 Scripts in `SAID-v1/visualization/` animate the generation process step by step, producing HTML or PNG figures for papers or blog posts.
