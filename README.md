@@ -13,7 +13,6 @@ Standard LLaDA iteratively unmasks all positions over many diffusion steps. SAID
    - **Easy tokens** (confidence ≥ `CONF_THRESH`): resolved in 1 step.
    - **Hard tokens** (confidence < `CONF_THRESH`): refined over 3 additional steps.
 
-Total model calls ≈ `steps + 1 + 3`, vs. `steps` calls for vanilla LLaDA — saving ~50% of compute by amortizing reconstruction across the pre-filled scaffold.
 
 ## Repository Structure
 
