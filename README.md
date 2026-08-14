@@ -185,8 +185,8 @@ python summarize_perf.py outputs/default/<run_timestamp>
 
 The project code is implemented based on **NVIDIA**, with concurrent support for **Huawei Ascend**. The following modifications are required:
 
-
-`opencompass/opencompass/configs/models/dllm/llada_instruct_8b.py`
+For SAID-v1, find `SAID-v1/opencompass/opencompass/models/dllmsaid.py`. For SAID-block, find `SAID-block/opencompass/opencompass/models/dllm.py`, 
+replace `auto` and `cuda` with `npu`。Such as SAID-v1：
 
 
 
