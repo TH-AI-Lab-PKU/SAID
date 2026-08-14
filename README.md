@@ -183,10 +183,10 @@ python summarize_perf.py outputs/default/<run_timestamp>
 
 ## Ascend‑adapted
 
-The project code is implemented based on NVIDIA, with concurrent support for Huawei Ascend. The following modifications are required:
+The project code is implemented based on **NVIDIA**, with concurrent support for **Huawei Ascend**. The following modifications are required:
 
 
-
+`opencompass/opencompass/configs/models/dllm/llada_instruct_8b.py`
 
 
 
