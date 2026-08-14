@@ -179,3 +179,16 @@ python run.py examples/<config>.py
 # Summarize throughput from logs
 python summarize_perf.py outputs/default/<run_timestamp>
 ```
+
+
+## Ascend‑adapted
+
+The project code is implemented based on NVIDIA, with concurrent support for Huawei Ascend. The following modifications are required:
+
+
+
+
+
+
+
+
