@@ -183,7 +183,7 @@ python summarize_perf.py outputs/default/<run_timestamp>
 
 ## Ascend‑adapted
 
-The project code is implemented based on **NVIDIA**, with concurrent support for **Huawei Ascend**. The following modifications are required:
+Our acceleration approach works effectively on **NVIDIA GPUs**. Furthermore, we provide the first‑of‑its‑kind native adaptation for **Ascend NPUs**, delivering full compatibility and optimized performance for LLM inference on Ascend hardware. If you are using Ascend NPUs, The following modifications are required:
 
 For SAID-v1, find `SAID-v1/opencompass/opencompass/models/dllmsaid.py`. For SAID-block, find `SAID-block/opencompass/opencompass/models/dllm.py`, 
 replace **auto** and **cuda** with **npu**。Such as SAID-v1：
