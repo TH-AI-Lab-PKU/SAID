@@ -267,20 +267,8 @@ class LLaDAModel(BaseModel):
         try:
             self.model = AutoModelForCausalLM.from_pretrained(
                 path, trust_remote_code=True, **model_kwargs)
-        except (ValueError, AttributeError):
-            # AttributeError: newer transformers calls all_tied_weights_keys on
-            # custom model classes (e.g. LLaDAModelLM) in two places:
-            # infer_auto_device_map and _move_missing_keys_from_meta_to_device.
-            # Fix: disable meta-tensor loading (low_cpu_mem_usage=False) and
-            # remove device_map so both code paths are bypassed, then move to
-            # GPU manually.
-            model_kwargs_fallback = dict(model_kwargs)
-            model_kwargs_fallback.pop('device_map', None)
-            model_kwargs_fallback['low_cpu_mem_usage'] = False
-            self.model = AutoModelForCausalLM.from_pretrained(
-                path, trust_remote_code=True, **model_kwargs_fallback)
-            if torch.cuda.is_available():
-                self.model = self.model.cuda()
+        except ValueError:
+            self.model = AutoModel.from_pretrained(path, **model_kwargs)
 
         if peft_path is not None:
             from peft import PeftModel
