@@ -22,7 +22,7 @@ python run.py examples/llada_instruct_gpqa.py
 python run.py examples/llada_instruct_arcc.py
 python run.py examples/llada_instruct_mmlupro.py
 
-#For the MBPP dataset, you need to change CONF_THRESH in my_generate_gtr_fc.py to 0.7, and change the steps of num_transfer_hard to 8 before running:
+#For the MBPP dataset, you need to change the steps of num_transfer_hard to 8 before running:
 python run.py examples/llada_instruct_mbpp.py
 
 
