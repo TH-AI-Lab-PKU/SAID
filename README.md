@@ -1,6 +1,5 @@
-# <h1 align="center">
-  SAID: Accelerating Diffusion-Based Language Models via Scaffold-Aware Iterative Decoding
-</h1>
+# SAID: Accelerating Diffusion-Based Language Models via Scaffold-Aware Iterative Decoding
+
 
 [![Paper PDF](https://img.shields.io/badge/Paper-PDF-b31b1b)](https://arxiv.org/abs/2606.04974)
 [![GitHub Code](https://img.shields.io/badge/GitHub-Code-181717?logo=github)](https://github.com/TH-AI-Lab-PKU/SAID)
