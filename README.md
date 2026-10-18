@@ -1,6 +1,7 @@
 # SAID: Scaffold-Aware Iterative Decoding
 
 [![Paper PDF](https://img.shields.io/badge/Paper-PDF-b31b1b)](https://arxiv.org/abs/2606.04974)
+[![GitHub Code](https://img.shields.io/badge/GitHub-Code-181717?logo=github)](https://github.com/TH-AI-Lab-PKU/SAID)
 
 SAID is a training-free two-stage framework that accelerates diffusion language models by decomposing generation into **interleaved-anchor scaffold construction** and **highly parallel detail completion**, maintaining competitive generation quality. SAID supports both full-sequence and block-wise generation.
 
