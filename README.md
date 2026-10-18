@@ -29,8 +29,8 @@ pip install setuptools==69.5.1
 Download the two models used in our experiments:
 
 ```bash
-huggingface-cli download GSAI-ML/LLaDA-8B-Instruct
-huggingface-cli download GSAI-ML/LLaDA-1.5
+hf download GSAI-ML/LLaDA-8B-Instruct
+hf download GSAI-ML/LLaDA-1.5
 ```
 
 > **Note:** Replace `path` in the following model configurations with the absolute path to your downloaded checkpoint.
@@ -79,7 +79,7 @@ Block-level SAID decodes successive blocks from left to right, constructing scaf
 
 ### Prepare the Framework
 
-Copy the OpenCompass framework from `SAID-v1/opencompass` into `SAID-block/opencompass`, preserving the block-specific files already present, and copy `SAID-v1/generate.py` into `SAID-block/`. Install the resulting framework with `pip install -e .` from `SAID-block/opencompass`; run the commands below from that directory.
+Since both implementations use the **OpenCompass** framework, we do not include a duplicate copy in **SAID-block**. Simply copy the code files from `SAID-block` into the corresponding paths under `SAID-v1`.
 
 ### Run Baseline
 
@@ -110,11 +110,9 @@ python run.py examples/llada_1p5_said_math_32.py
 
 ## Ascend‑adapted
 
-> **File-name update:** In the current block implementation, the wrapper is `SAID-block/opencompass/opencompass/models/dllmblock.py`. References to the block-side `dllm.py` below refer to this file.
-
 Our acceleration approach works effectively on **NVIDIA GPUs**. Furthermore, we provide the first‑of‑its‑kind native adaptation for **Ascend NPUs**, delivering full compatibility and optimized performance for LLM inference on Ascend hardware. If you are using Ascend NPUs, The following modifications are required:
 
-For SAID-v1, find `SAID-v1/opencompass/opencompass/models/dllmsaid.py`. For SAID-block, find `SAID-block/opencompass/opencompass/models/dllm.py`, 
+For SAID-v1, find `SAID-v1/opencompass/opencompass/models/dllmsaid.py`. For SAID-block, find `SAID-block/opencompass/opencompass/models/dllmblock.py`, 
 replace **auto** and **cuda** with **npu**。Such as SAID-v1：
 ```bash
 import torch_npu
@@ -122,6 +120,3 @@ torch.cuda.synchronize() -->> torch.npu.synchronize()
 model_kwargs: dict = dict(device_map='auto') -->> model_kwargs: dict = dict(device="npu")
 ```
 
-## Acknowledgments
-
-This project builds on [OpenCompass](https://github.com/open-compass/opencompass), [LLaDA-8B-Instruct](https://huggingface.co/GSAI-ML/LLaDA-8B-Instruct), and [LLaDA 1.5](https://huggingface.co/GSAI-ML/LLaDA-1.5). We thank their authors for making the code and models available.
