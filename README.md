@@ -2,9 +2,9 @@
 
 [![Paper PDF](https://img.shields.io/badge/Paper-PDF-b31b1b)](https://arxiv.org/abs/2606.04974)
 
-SAID is a training-free two-stage framework that accelerates diffusion language models by decomposing generation into **interleaved-anchor scaffold construction** and **highly parallel detail completion**, maintaining competitive generation quality.
+SAID is a training-free two-stage framework that accelerates diffusion language models by decomposing generation into **interleaved-anchor scaffold construction** and **highly parallel detail completion**, maintaining competitive generation quality. SAID supports both full-sequence and block-wise generation.
 
-We provide **token-level SAID** on LLaDA-8B-Instruct and **block-level SAID** on LLaDA 1.5. Both implementations use OpenCompass for evaluation. The full framework is included in `SAID-v1`, while `SAID-block` provides the block-specific code and configurations.
+We provide **token-level SAID** on LLaDA-8B-Instruct and **block-level SAID** on LLaDA 1.5. Both implementations use OpenCompass for evaluation. 
 
 ## Setup
 
@@ -16,14 +16,12 @@ Run from the repository root:
 conda create -n said python=3.10 -y
 conda activate said
 
-# PyTorch 2.5.1 with CUDA 12.1
-pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu121
+pip install torch==2.5.1
 pip install transformers==4.49.0
 
 cd SAID-v1/opencompass
 pip install -e .
 pip install setuptools==69.5.1
-cd ../..
 ```
 
 ### Model Download
@@ -31,8 +29,8 @@ cd ../..
 Download the two models used in our experiments:
 
 ```bash
-huggingface-cli download GSAI-ML/LLaDA-8B-Instruct --local-dir models/LLaDA-8B-Instruct
-huggingface-cli download GSAI-ML/LLaDA-1.5 --local-dir models/LLaDA-1.5
+huggingface-cli download GSAI-ML/LLaDA-8B-Instruct
+huggingface-cli download GSAI-ML/LLaDA-1.5
 ```
 
 > **Note:** Replace `path` in the following model configurations with the absolute path to your downloaded checkpoint.
@@ -74,17 +72,6 @@ python run.py examples/llada_instruct_mmlupro.py
 > python run.py examples/llada_instruct_mbpp.py
 > ```
 
-### Visualization
-
-Scripts in `SAID-v1/visualization/` visualize the generation process and produce HTML or PNG outputs. Update the model and output paths before running.
-
-```bash
-# From the repository root
-cd SAID-v1/visualization
-python my_generate_said.py
-python visualization_paper.py
-python html_to_png.py
-```
 
 ## SAID-Block
 
