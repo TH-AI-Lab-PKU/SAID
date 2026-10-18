@@ -1,67 +1,89 @@
 # SAID: Scaffold-Aware Iterative Decoding
 
-**Accelerating Diffusion-Based Language Models via Scaffold-Aware Iterative Decoding**
+**A training-free two-stage acceleration framework for diffusion language models.**
 
-SAID is a training-free acceleration method for masked diffusion language models (e.g., LLaDA). The core idea is a two-stage decode: first generate a sparse "scaffold" of tokens at even positions, then use the scaffold as context to rapidly reconstruct the remaining odd-position tokens — splitting reconstruction into high-confidence (1 step) and low-confidence (3 steps) subgroups based on a confidence threshold.
+📄 [Paper: Accelerating Diffusion-Based Language Models via Scaffold-Aware Iterative Decoding](https://arxiv.org/abs/2606.04974)
 
-## Method
+SAID decomposes generation into **interleaved-anchor scaffold construction** and **highly parallel detail completion**. Non-adjacent anchors distributed throughout the sequence establish a global semantic scaffold, which guides the completion of the remaining tokens.
 
-Standard LLaDA iteratively unmasks all positions over many diffusion steps. SAID splits generation into two stages:
+Within token-level detail completion, **Confidence-Hierarchical Layered Generation (CHLG)** allocates computation according to predictive confidence: high-confidence tokens are committed together, while uncertain positions are completed iteratively using the enriched context. The decoding budgets are configurable rather than fixed to a universal number of steps.
 
-1. **Scaffold stage**: Run standard masked diffusion on even-indexed positions for `steps` iterations to produce a set of high-quality scaffold tokens.
-2. **Reconstruction stage**: Given the scaffold, fill in odd-indexed positions in one forward pass, then split by confidence:
-   - **Easy tokens** (confidence ≥ `CONF_THRESH`): resolved in 1 step.
-   - **Hard tokens** (confidence < `CONF_THRESH`): refined over 3 additional steps.
+This repository provides:
+
+- **SAID-v1:** token-level SAID on **LLaDA-8B-Instruct**.
+- **SAID-Block:** block-level SAID on **LLaDA 1.5**, applying scaffold construction and detail completion within successive blocks.
+
+Both implementations use **OpenCompass** for evaluation. The full evaluation framework is included only in `SAID-v1`; `SAID-block` contains the additional generation code, model wrapper, and configurations needed for block-level evaluation.
 
 
-## Repository Structure
+## Setup
 
-```
-SAID/
-├── SAID-v1/                   # Core SAID method + evaluation
-│   ├── generate.py              # Standard LLaDA block-AR generation (baseline)
-│   ├── my_generate_said.py    # SAID generation (scaffold + confidence reconstruction)
-│   ├── eval.sh                  # Evaluation commands (baseline vs. SAID)
-│   ├── opencompass/
-│   │   ├── examples/            # SAID eval configs (our method)
-│   ├── others/                  # Experimental generation variants
-│   │   ├── generate_random.py          # Random-order generation ablation
-│   │   ├── my_generate_said_duihuan.py  # SAID dialogue variant
-│   │   └── no_checkboard.py            # Non-checkerboard ablation
-│   └── visualization/           # Generation process visualization
-│       ├── my_generate_said.py
-│       ├── visualization_paper.py
-│       ├── visualization_zhihu.py
-│       └── html_to_png.py
-│
-└── SAID-block/                  # Block-AR + SAID acceleration variant
-    ├── generate_said.py          # SAID sampling
-    └── opencompass/
-        ├── examples/            # OpenCompass eval configs
-        ├── opencompass/
-        │   ├── models/dllm.py   # LLaDAModel and LLaDASAIDModel (SAID) wrappers
-        │   └── configs/models/dllm/
-        └── summarize_perf.py    # Parse [Perf] logs and print throughput table
+### 1. Create the environment
+
+The following commands use Bash on Linux. Start from the repository root.
+
+```bash
+conda create -n said python=3.10 -y
+conda activate said
+
+# CUDA 12.1 build of PyTorch
+pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu121
+pip install transformers==4.49.0
+
+cd SAID-v1/opencompass
+pip install -e .
+pip install setuptools==69.5.1
+cd ../..
 ```
 
----
+Use a compatible NVIDIA driver for the CUDA build above. Other PyTorch 2.5.1 CUDA builds are available in the [official installation instructions](https://pytorch.org/get-started/previous-versions/).
+
+If dependency installation changes the requested package versions, restore them before running experiments:
+
+```bash
+pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu121
+pip install transformers==4.49.0 setuptools==69.5.1
+```
+
+### 2. Download the models
+
+Download the official checkpoints from Hugging Face:
+
+- [LLaDA-8B-Instruct](https://huggingface.co/GSAI-ML/LLaDA-8B-Instruct)
+- [LLaDA 1.5](https://huggingface.co/GSAI-ML/LLaDA-1.5)
+
+```bash
+python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='GSAI-ML/LLaDA-8B-Instruct', local_dir='models/LLaDA-8B-Instruct')"
+
+python -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='GSAI-ML/LLaDA-1.5', local_dir='models/LLaDA-1.5')"
+```
+
+> **Model paths:** Replace the existing `path` value in each configuration below with the absolute path to your downloaded checkpoint.
+
+| Implementation | Model configuration files |
+|---|---|
+| SAID-v1 | `SAID-v1/opencompass/opencompass/configs/models/dllm/llada_instruct_8b.py` |
+| SAID-v1 | `SAID-v1/opencompass/opencompass/configs/models/dllm/llada_instruct_said.py` |
+| SAID-Block | `SAID-block/opencompass/opencompass/configs/models/dllm/llada_15_instruct_8b.py` |
+| SAID-Block | `SAID-block/opencompass/opencompass/configs/models/dllm/llada_15_instruct_8b_said.py` |
+
+For example:
+
+```python
+path='/absolute/path/to/SAID-main/models/LLaDA-8B-Instruct'
+```
+
+Prepare any dataset files or access credentials required by the corresponding OpenCompass dataset configurations before evaluation.
 
 ## SAID-v1
 
-### Setup
+Token-level SAID builds an interleaved scaffold over the response and then completes the remaining positions with confidence-guided computation allocation.
+
+Run the following commands from `SAID-v1/opencompass`.
+
+### Run the baseline
 
 ```bash
-cd SAID-v1/opencompass
-pip install -e .
-huggingface-cli download GSAI-ML/LLaDA-8B-Instruct
-```
-
-Update the model path in `opencompass/opencompass/configs/models/dllm/llada_instruct_8b.py`.
-
-### Run Baseline (standard block-AR)
-
-```bash
-cd SAID-v1/opencompass
 python run.py examples/llada_instruct_gen_arcc_length512_block512.py
 python run.py examples/llada_instruct_gen_gpqa_length64_block64_confidence.py
 python run.py examples/llada_instruct_gen_gsm8k_length512_block512_confidence.py
@@ -70,10 +92,9 @@ python run.py examples/llada_instruct_gen_mbpp_length256_block256_confidence.py
 python run.py examples/llada_instruct_gen_mmlupro_length256_block256.py
 ```
 
-### Run SAID (our method)
+### Run SAID
 
 ```bash
-cd SAID-v1/opencompass
 python run.py examples/llada_instruct_gsm8k.py
 python run.py examples/llada_instruct_math.py
 python run.py examples/llada_instruct_gpqa.py
@@ -81,107 +102,114 @@ python run.py examples/llada_instruct_arcc.py
 python run.py examples/llada_instruct_mmlupro.py
 ```
 
-> **MBPP note**: set `num_transfer_hard` steps to 8 in `my_generate_said.py` before running:
-> ```bash
-> python run.py examples/llada_instruct_mbpp.py
-> ```
+**MBPP:** In `SAID-v1/my_generate_said.py`, change the low-confidence decoding budget to `8` before running MBPP:
+
+```python
+num_transfer_hard = get_num_transfer_tokens(hard_mask, steps=8)
+```
+
+Then run:
+
+```bash
+python run.py examples/llada_instruct_mbpp.py
+```
+
+Restore this budget to `3` when using the other supplied token-level configurations. The current confidence threshold is `CONF_THRESH = 0.8`.
 
 ### Visualization
 
-Scripts in `SAID-v1/visualization/` animate the generation process step by step, producing HTML or PNG figures for papers or blog posts.
+The scripts in `SAID-v1/visualization/` visualize the decoding process and produce HTML or PNG outputs. Adjust the model and output paths in the scripts before use.
 
 ```bash
+# From the repository root
 cd SAID-v1/visualization
 python my_generate_said.py
 python visualization_paper.py
 python html_to_png.py
 ```
 
----
+## SAID-Block
 
-## SAID-Block: Block-AR + SAID
+Block-level SAID processes response blocks from left to right. Within each block, it first resolves distributed scaffold groups and then completes the final detail group. Completed groups and earlier blocks remain available as context.
 
-An alternative acceleration approach combining semi-autoregressive block decoding with hierarchical checkerboard sampling.
+### Prepare the shared framework
 
-**Block-AR**: Decode left-to-right one block at a time. Each block is fully resolved before the next starts, enabling KV-cache reuse.
+`SAID-block/opencompass` contains only block-specific files. Populate the missing framework files from `SAID-v1`, retaining the supplied block-specific files.
 
-**SAID**: Within each block, apply a checkerboard stage partition. Generation stages handle maximally-spaced positions with full step budgets. The reconstruction stage fills the remaining ~50% of positions in as few as 1–2 steps, since they are surrounded by already-generated context.
-
-### Generation Script
-
-**`generate_said.py`** — Block-AR + intra-block SAID. `block_length` controls the AR granularity; set `block_length=gen_length` for flat (no block-AR) decoding.
-
-```python
-from generate_said import generate_said
-
-# Block-AR + intra-block SAID (block_length < gen_length)
-out = generate_said(
-    model, input_ids, attention_mask,
-    steps=128, gen_length=256, block_length=32,
-    num_stages=3,   # K=3: 2 generation stages + 1 reconstruction stage
-    rec_steps=2,
-)
-
-# Flat SAID, no block-AR (block_length == gen_length)
-out = generate_said(
-    model, input_ids, attention_mask,
-    steps=128, gen_length=128, block_length=128,
-    num_stages=3, rec_steps=2,
-)
-```
-
-### Key Parameters
-
-| Parameter | Description |
-|-----------|-------------|
-| `block_length` | Tokens per AR block (`gen_length` must be divisible) |
-| `num_stages` | SAID stages K. K=1 → vanilla LLaDA, K=2 → basic SAID, K=3 → extra sub-stage |
-| `rec_steps` | Steps for the reconstruction stage; as low as 1 for maximum speedup |
-| `diff_confidence_eos_eot_inf` | Mask EOS/EOT confidence to prevent premature stopping |
-
-**Speedup intuition**: with `num_stages=3, rec_steps=2, steps=128` — stages use ~63 / ~63 / 2 steps for 25% / 25% / 50% of tokens. To get wall-clock speedup, reduce total steps: `steps=64, rec_steps=1` halves model calls with comparable quality.
-
-### OpenCompass Evaluation
-
-Model wrappers in `SAID-block/opencompass/opencompass/models/dllm.py`:
-
-| Class | Generation |
-|-------|-----------|
-| `LLaDAModel` | Standard block-AR (baseline) |
-| `LLaDASAIDModel` | Block-AR + SAID (accelerated) |
-
-**LLaDA 1.5 SAID configs**
-
-| Config | Benchmark | Block | Length |
-|--------|-----------|-------|--------|
-| `llada_1p5_said_arcc_length512_block512.py` | ARC-Challenge | 512 | 512 |
-| `llada_1p5_said_gpqa_length256_block16.py` | GPQA | 16 | 256 |
-| `llada_1p5_said_gsm8k_length256_block16.py` | GSM8K | 16 | 256 |
-| `llada_1p5_said_humaneval_length512_block32.py` | HumanEval | 32 | 512 |
-| `llada_1p5_said_ifeval_length256_block16.py` | IFEval | 16 | 256 |
-| `llada_1p5_said_math_length1024_block128.py` | MATH | 128 | 1024 |
-| `llada_1p5_said_mbpp_length512_block32.py` | MBPP | 32 | 512 |
-
-**LLaDA 1.5 baseline configs**
-
-| Config | Benchmark | Block | Length |
-|--------|-----------|-------|--------|
-| `llada_1p5_gen_arcc_length512_block32.py` | ARC-Challenge | 32 | 512 |
-| `llada_1p5_gen_arcc_length512_block64.py` | ARC-Challenge | 64 | 512 |
-| `llada_1p5_gen_gpqa_length256_block16.py` | GPQA | 16 | 256 |
-| `llada_1p5_gen_gpqa_length256_block16_server.py` | GPQA (server) | 16 | 256 |
-| `llada_1p5_gen_mbpp_length512_block32_confidence.py` | MBPP (confidence EOS) | 32 | 512 |
+Run once from the repository root:
 
 ```bash
-cd SAID-block/opencompass
-python run.py examples/<config>.py
+# Copy missing framework files without overwriting block-specific files.
+cp -rn SAID-v1/opencompass/. SAID-block/opencompass/
 
-# Summarize throughput from logs
-python summarize_perf.py outputs/default/<run_timestamp>
+# The block wrapper also imports the baseline generation function.
+cp -n SAID-v1/generate.py SAID-block/generate.py
+
+# Activate the block-level OpenCompass checkout.
+cd SAID-block/opencompass
+pip install -e .
+pip install transformers==4.49.0 setuptools==69.5.1
 ```
 
+> Keep the block-specific `opencompass/models/__init__.py`, which imports `LLaDAModel` and `LLaDASAIDModel` from `dllmblock.py`. Do not import both `dllm.py` and `dllmblock.py` into the same model registry: both define `LLaDAModel`.
+
+The commands below run from `SAID-block/opencompass`.
+
+### Run the baseline
+
+```bash
+python run.py examples/llada_1p5_gen_gpqa.py
+python run.py examples/llada_1p5_gen_arcc.py
+python run.py examples/llada_1p5_gen_mbpp.py
+python run.py examples/llada_1p5_gen_math.py
+```
+
+### Run SAID
+
+```bash
+python run.py examples/llada_1p5_said_gpqa_16.py
+python run.py examples/llada_1p5_said_arcc_16.py
+python run.py examples/llada_1p5_said_mbpp_32.py
+python run.py examples/llada_1p5_said_math_32.py
+```
+
+### Configurations
+
+The following values are taken from the supplied example configurations.
+
+| Benchmark | Block length | Generation length | Baseline steps | SAID steps | `num_stages` | `rec_steps` |
+|---|---:|---:|---:|---:|---:|---:|
+| GPQA | 16 | 128 | 128 | 32 | 2 | 1 |
+| ARC-C | 16 | 256 | 256 | 96 | 3 | 1 |
+| MBPP | 32 | 256 | 256 | 136 | 2 | 1 |
+| MATH | 32 | 256 | 256 | 128 | 2 | 1 |
+
+| Parameter | Meaning |
+|---|---|
+| `gen_length` | Number of response tokens to generate. |
+| `gen_blocksize` | Number of tokens per block; must divide `gen_length`. |
+| `gen_steps` | Total allocated decoding budget, divided across blocks. |
+| `num_stages` | Number of groups within each block, including the final detail group. |
+| `rec_steps` | Step budget for the final detail group in each block. |
+| `batch_size`, `batch_size_` | Evaluation batching settings; both are `1` in the supplied configs. |
+
+For `B = gen_length / gen_blocksize` blocks, each block receives `gen_steps // B` steps. The final detail group receives `rec_steps`; the remaining budget is assigned to the scaffold groups. Keep enough steps for every nonempty group.
+
+The example configurations use multiple evaluation workers. Adjust `num_worker` and `max_num_workers` to match the available hardware.
+
+### Switch back to SAID-v1
+
+When returning to token-level evaluation, reactivate its framework checkout:
+
+```bash
+# From the repository root
+cd SAID-v1/opencompass
+pip install -e .
+```
 
 ## Ascend‑adapted
+
+> **File-name update:** In the current block implementation, the wrapper is `SAID-block/opencompass/opencompass/models/dllmblock.py`. References to the block-side `dllm.py` below refer to this file.
 
 Our acceleration approach works effectively on **NVIDIA GPUs**. Furthermore, we provide the first‑of‑its‑kind native adaptation for **Ascend NPUs**, delivering full compatibility and optimized performance for LLM inference on Ascend hardware. If you are using Ascend NPUs, The following modifications are required:
 
@@ -193,6 +221,6 @@ torch.cuda.synchronize() -->> torch.npu.synchronize()
 model_kwargs: dict = dict(device_map='auto') -->> model_kwargs: dict = dict(device="npu")
 ```
 
+## Acknowledgments
 
-
-
+This project builds on [OpenCompass](https://github.com/open-compass/opencompass), [LLaDA-8B-Instruct](https://huggingface.co/GSAI-ML/LLaDA-8B-Instruct), and [LLaDA 1.5](https://huggingface.co/GSAI-ML/LLaDA-1.5). We thank their authors for making the code and models available.
