@@ -382,7 +382,7 @@ class LLaDAModelsaid(BaseModel):
         print('final prompt:', prompt)
         self.tokenizer.padding_side = "left" 
         prompt = self.tokenizer.batch_encode_plus(prompt, padding = True, return_tensors='pt')['input_ids']
-        #新增指标代码--------------------
+        #------------------------------
         batch_size = prompt.shape[0]
         torch.cuda.synchronize()
         t_start = time.perf_counter()
