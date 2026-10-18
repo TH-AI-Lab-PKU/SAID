@@ -15,6 +15,44 @@ This repository provides:
 
 Both implementations use **OpenCompass** for evaluation. The full evaluation framework is included only in `SAID-v1`; `SAID-block` contains the additional generation code, model wrapper, and configurations needed for block-level evaluation.
 
+## Repository Structure
+
+```text
+SAID-main/
+├── README.md
+├── SAID-v1/
+│   ├── generate.py                    # Baseline LLaDA generation
+│   ├── my_generate_said.py            # Token-level SAID with CHLG
+│   ├── eval.sh
+│   ├── opencompass/                   # Shared evaluation framework
+│   │   ├── run.py
+│   │   ├── examples/                  # Baseline and token-level SAID configs
+│   │   └── opencompass/
+│   │       ├── models/
+│   │       │   ├── dllm.py            # Baseline wrapper
+│   │       │   └── dllmsaid.py        # Token-level SAID wrapper
+│   │       └── configs/models/dllm/
+│   ├── others/                       # Anchor-selection ablations
+│   │   ├── generate_random.py
+│   │   ├── my_generate_said_duihuan.py
+│   │   └── no_checkboard.py
+│   └── visualization/
+│       ├── my_generate_said.py
+│       ├── visualization_paper.py
+│       ├── visualization_zhihu.py
+│       └── html_to_png.py
+└── SAID-block/
+    ├── generate_said.py               # Block-level SAID generation
+    └── opencompass/                   # Block-specific files only
+        ├── examples/                  # Four baseline and four SAID configs
+        └── opencompass/
+            ├── models/
+            │   ├── __init__.py
+            │   └── dllmblock.py       # Baseline and block-level SAID wrappers
+            └── configs/models/dllm/
+                ├── llada_15_instruct_8b.py
+                └── llada_15_instruct_8b_said.py
+```
 
 ## Setup
 
