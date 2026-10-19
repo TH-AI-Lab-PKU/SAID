@@ -7,9 +7,12 @@
 SAID is a training-free two-stage framework that accelerates diffusion language models by decomposing generation into **interleaved-anchor scaffold construction** and **highly parallel detail completion**, maintaining competitive generation quality. SAID supports both full-sequence and block-wise generation.
 
 We provide **token-level SAID** on LLaDA-8B-Instruct and **block-level SAID** on LLaDA 1.5. Both implementations use OpenCompass for evaluation. 
+
 <p align="center">
   <img src="SAID-v1/SAID.png" alt="Overview of SAID" width="100%">
 </p>
+
+
 ## Setup
 
 ### Environment
